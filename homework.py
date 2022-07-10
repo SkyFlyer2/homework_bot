@@ -7,6 +7,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from logging import StreamHandler
+import exceptions
 
 
 # Здесь задана глобальная конфигурация для всех логгеров
@@ -31,7 +32,7 @@ logger.addHandler(handler)
 load_dotenv()
 
 # AQAAAAAAJywxAAYckRc5OHVyEUGIrjVI49EoYug
-PRACTIKUM_TOKEN = os.getenv('PRACTIUM_TOKEN')
+PRACTIKUM_TOKEN = os.getenv('PRACTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('CHAT_ID')
 
@@ -40,7 +41,7 @@ print(TELEGRAM_TOKEN)
 print(TELEGRAM_CHAT_ID)
 
 
-RETRY_TIME = 600
+RETRY_TIME = 60
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTIKUM_TOKEN}'}
 
@@ -85,13 +86,25 @@ def check_response(response):
         logging.error(f'Error while getting list of homeworks: {error}')
         print('3')
         print('Error while getting list of homeworks')
+    if hw_list is None:
+        raise exceptions.CheckResponseException('Списка домашних заданий нет')
+        print(4)
+    if not isinstance(hw_list, list):
+        print(0)
+#        raise exceptions.CheckResponseException(
+#            'Ответ Api не является списком')
+    if len(hw_list) == 0:
+        print(5)
+        raise exceptions.CheckResponseException(
+            'Домашнего задания нет за данный промежуток времени')
+
     else:
         return hw_list
 
 
 def parse_status(homework):
-    homework_name = homework.get('homework_name')
-    homework_status = homework.get('status')
+    homework_name = homework[0].get('homework_name')
+    homework_status = homework[0].get('status')
     #HOMEWORK_STATUSES
 
     verdict = HOMEWORK_STATUSES.get(homework_status)
@@ -109,7 +122,8 @@ def main():
     """Основная логика работы бота."""
 
     bot = Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time())
+    current_timestamp = int(time()) - 1209600
+    previous_status = None
 
     check_tokens()
 
@@ -118,20 +132,26 @@ def main():
             response = get_api_answer(current_timestamp)
             print(response)
             homeworks = check_response(response)
-
-            current_timestamp = homeworks[0].get('current_date')
-            for homework in homeworks:
+#            print(homeworks)
+#            print(homeworks[0])
+            current_timestamp = response.get('current_date', [])
+            #homeworks[0].get('current_date')
+            status = homeworks[0].get('status')
+            if status != previous_status:
+                previous_status = status
                 message = parse_status(homeworks)
                 send_message(bot, message)
-
-            sleep(RETRY_TIME)
-
+            else:
+                sleep(RETRY_TIME)
+        except exceptions.CheckResponseException as error:
+            message = f'Обновление статуса: {error}'
+            logging.error(message)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logging.error(message)
             sleep(RETRY_TIME)
         else:
-            logger.DEBUG('Пока что всё работает хорошо')
+            logger.debug('Пока что всё работает хорошо')
 
 
 if __name__ == '__main__':

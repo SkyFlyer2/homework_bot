@@ -1,0 +1,2 @@
+class CheckResponseException(Exception):
+    pass
