@@ -5,7 +5,8 @@ from telegram import ReplyKeyboardMarkup, Bot
 from telegram.ext import CommandHandler, Updater
 import os
 import sys
-from dotenv import load_dotenv
+import dotenv
+#from dotenv import load_dotenv
 from logging import StreamHandler
 import exceptions
 
@@ -29,7 +30,7 @@ handler = StreamHandler(stream=sys.stdout)
 logger.addHandler(handler)
 
 
-load_dotenv()
+dotenv.load_dotenv()
 
 # AQAAAAAAJywxAAYckRc5OHVyEUGIrjVI49EoYug
 PRACTIKUM_TOKEN = os.getenv('PRACTIKUM_TOKEN')
@@ -105,7 +106,6 @@ def check_response(response):
 def parse_status(homework):
     homework_name = homework[0].get('homework_name')
     homework_status = homework[0].get('status')
-    #HOMEWORK_STATUSES
 
     verdict = HOMEWORK_STATUSES.get(homework_status)
 
@@ -132,8 +132,6 @@ def main():
             response = get_api_answer(current_timestamp)
             print(response)
             homeworks = check_response(response)
-#            print(homeworks)
-#            print(homeworks[0])
             current_timestamp = response.get('current_date', [])
             #homeworks[0].get('current_date')
             status = homeworks[0].get('status')
