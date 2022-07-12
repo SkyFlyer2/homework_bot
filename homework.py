@@ -1,38 +1,34 @@
 import logging
 import requests
+from http import HTTPStatus
 from time import time, sleep
 from telegram import ReplyKeyboardMarkup, Bot
 from telegram.ext import CommandHandler, Updater
 import os
 import sys
-import dotenv
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 from logging import StreamHandler
 import exceptions
 
 
-# Здесь задана глобальная конфигурация для всех логгеров
 logging.basicConfig(
-    level=logging.DEBUG,
-    filename='homework.log',
-    format='%(asctime)s, %(levelname)s, %(message)s, %(name)s'
-)
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO)
+    format='%(asctime)s, %(levelname)s, %(message)s, %(name)s',
+    level=logging.DEBUG)
 
-# А тут установлены настройки логгера для текущего файла - example_for_log.py
+handler = StreamHandler(sys.stdout)
 logger = logging.getLogger(__name__)
-# Устанавливаем уровень, с которого логи будут сохраняться в файл
-logger.setLevel(logging.INFO)
-# Указываем обработчик логов
-handler = StreamHandler(stream=sys.stdout)
+#logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-dotenv.load_dotenv()
+logger.debug("A DEBUG message")
+logger.info("An INFO message")
+logger.warning("A WARNING message")
+logger.error("An ERROR message")
+logger.critical("A CRITICAL message")
 
-# AQAAAAAAJywxAAYckRc5OHVyEUGIrjVI49EoYug
+load_dotenv()
+
 PRACTIKUM_TOKEN = os.getenv('PRACTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('CHAT_ID')
@@ -65,8 +61,8 @@ def get_api_answer(current_timestamp):
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         # response.status_code = 500
-        if response.status_code != 200:
-            message = f'Ошибка в работе API код: {response.status_code}'
+        if response.status_code != HTTPStatus.OK:
+            message = f'Ошибка при запросе API: {response.status_code}'
             logging.error(message)
     except Exception as error:
         message = f'Сбой при работе API Yandex_Praktikum ошибка: {error}'
@@ -149,7 +145,7 @@ def main():
             logging.error(message)
             sleep(RETRY_TIME)
         else:
-            logger.debug('Пока что всё работает хорошо')
+            logger.debug('Работа программы без замечаний')
 
 
 if __name__ == '__main__':
