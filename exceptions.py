@@ -1,6 +1,4 @@
 class CheckResponseException(Exception):
-    pass
+    """Исключение для функции CheckResponse."""
 
-
-class APIResponseCodeException(Exception):
     pass

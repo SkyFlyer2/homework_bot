@@ -2,8 +2,7 @@ import logging
 import requests
 from http import HTTPStatus
 from time import time, sleep
-from telegram import ReplyKeyboardMarkup, Bot
-from telegram.ext import CommandHandler, Updater
+from telegram import Bot
 import os
 import sys
 from dotenv import load_dotenv
@@ -17,26 +16,13 @@ logging.basicConfig(
 
 handler = StreamHandler(sys.stdout)
 logger = logging.getLogger(__name__)
-#logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
-
-
-logger.debug("A DEBUG message")
-logger.info("An INFO message")
-logger.warning("A WARNING message")
-logger.error("An ERROR message")
-logger.critical("A CRITICAL message")
 
 load_dotenv()
 
 PRACTICUM_TOKEN = os.getenv('PRACTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('CHAT_ID')
-
-#print(PRACTICUM_TOKEN)
-print(TELEGRAM_TOKEN)
-print(TELEGRAM_CHAT_ID)
-
 
 RETRY_TIME = 60
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
@@ -53,6 +39,7 @@ old_message = ''
 
 
 def send_message(bot, message):
+    """Отправляет сообщение в Telegram чат."""
     global old_message
     try:
         if old_message != message:
@@ -64,6 +51,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
+    """Делает запрос к эндпоинту API-сервиса."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
 
@@ -82,7 +70,7 @@ def get_api_answer(current_timestamp):
 
 def check_response(response):
     """Проверяет ответ API на корректность."""
-    print(type(response))    
+    print(type(response))
     if isinstance(response, list) and len(response) == 1:
         response = response[0]
     hw_list = response.get('homeworks', [])
@@ -100,12 +88,9 @@ def check_response(response):
 
 
 def parse_status(homework):
-#    try:
+    """Извлекает из информации о домашней работе статус этой работы."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
-#    except KeyError as error:
-#        logging.error(f'Ошибка при получении списка работ: {error}')
-#        send_message(bot_fav, error)
     if homework_status is None:
         error = 'Ошибка, отсутствует статус домашней работы'
         logging.error(error)
@@ -127,7 +112,12 @@ def parse_status(homework):
 
 
 def check_tokens():
-    if PRACTICUM_TOKEN is None or TELEGRAM_TOKEN is None or TELEGRAM_CHAT_ID is None:
+    """Проверяет доступность переменных окружения."""
+    if (
+        PRACTICUM_TOKEN is None
+        or TELEGRAM_TOKEN is None
+        or TELEGRAM_CHAT_ID is None
+    ):
         logging.critical('Ошибка, отсутствуют переменные окружения')
         return False
     return True
