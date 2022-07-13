@@ -81,20 +81,17 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-
-    try:
-        hw_list = response['homeworks']
-    except IndexError as error:
-        logging.error(f'Ошибка при получении списка homeworks: {error}')
-        send_message(bot_fav, error)
-    except KeyError as error:
-        logging.error(f'Ошибка при получении списка homeworks: {error}')
-        send_message(bot_fav, error)
+    """Проверяет ответ API на корректность."""
+    print(type(response))    
+    if isinstance(response, list) and len(response) == 1:
+        response = response[0]
+    hw_list = response.get('homeworks', [])
     if hw_list is None:
-        raise exceptions.CheckResponseException('Списка домашних заданий нет')
+        raise exceptions.CheckResponseException('Список домашних заданий пуст')
     if not isinstance(hw_list, list):
-        logging.error(f'Ответ при запросе API: {error}')
-        raise Exception('Ответ API не является списком')
+        error = 'Ответ API не является списком'
+        logging.error(error)
+        raise Exception(error)
     if len(hw_list) == 0:
         raise exceptions.CheckResponseException(
             'Домашнего задания нет за данный промежуток времени')
@@ -103,12 +100,12 @@ def check_response(response):
 
 
 def parse_status(homework):
-    try:
-        homework_name = homework[0].get('homework_name')
-        homework_status = homework[0].get('status')
-    except KeyError as error:
-        logging.error(f'Ошибка при получении списка работ: {error}')
-        send_message(bot_fav, error)
+#    try:
+    homework_name = homework.get('homework_name')
+    homework_status = homework.get('status')
+#    except KeyError as error:
+#        logging.error(f'Ошибка при получении списка работ: {error}')
+#        send_message(bot_fav, error)
     if homework_status is None:
         error = 'Ошибка, отсутствует статус домашней работы'
         logging.error(error)
@@ -148,25 +145,24 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
+            print(type(response))
             homeworks = check_response(response)
+            print(type(homeworks))
             current_timestamp = response.get('current_date', [])
-            #homeworks[0].get('current_date')
             status = homeworks[0].get('status')
             if status != previous_status:
                 previous_status = status
-                message = parse_status(homeworks)
+                message = parse_status(homeworks[0])
                 send_message(bot, message)
-            else:
-                sleep(RETRY_TIME)
         except exceptions.CheckResponseException as error:
             logging.info(f'Обновление статуса: {error}')
-            sleep(RETRY_TIME)
         except Exception as error:
             logging.error(f'Сбой в работе программы: {error}')
             send_message(bot, error)
-            sleep(RETRY_TIME)
         else:
             logger.debug('Работа программы без замечаний')
+        finally:
+            sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
