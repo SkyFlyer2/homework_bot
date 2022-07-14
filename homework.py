@@ -113,7 +113,7 @@ def main():
         logging.critical('Ошибка, отсутствуют переменные окружения')
         exit()
 
-    current_timestamp = int(time()# - 1209600
+    current_timestamp = int(time())  # - 1209600
     previous_status = None
     bot = Bot(token=TELEGRAM_TOKEN)
 
