@@ -29,7 +29,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_STATUSES = {
+HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -89,7 +89,7 @@ def parse_status(homework):
     if homework_name is None:
         raise KeyError('Ошибка, пустое значение homework_name')
 
-    verdict = HOMEWORK_STATUSES.get(homework_status)
+    verdict = HOMEWORK_VERDICTS.get(homework_status)
     if verdict is None:
         raise KeyError('Ошибка, неизвестное значение status')
 
@@ -120,17 +120,14 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            print(type(response))
             homeworks = check_response(response)
-            print(type(homeworks))
             current_timestamp = response.get('current_date', [])
             status = homeworks[0].get('status')
             if status != previous_status:
                 previous_status = status
-                message = parse_status(homeworks[0])
-                send_message(bot, message)
-        except exceptions.CheckResponseException as error:
-            logging.info(f'Обновление статуса: {error}')
+                send_message(bot, parse_status(homeworks[0]))
+        except exceptions.CheckResponseException as response_status:
+            logging.info(f'Обновление статуса: {response_status}')
         except Exception as error:
             msg_err = f'Сбой в работе программы: {error}'
             logging.error(msg_err)
