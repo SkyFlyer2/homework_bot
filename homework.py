@@ -68,16 +68,20 @@ def check_response(response):
     if isinstance(response, list) and len(response) == 1:
         # без этого тест не проходит, возможно есть более красивое решение
         response = response[0]
+    if 'current_date' not in response:
+        raise Exception('В ответе API отсутствует ключ current_date')
+    if 'homeworks' not in response:
+        raise Exception('В ответе API отсутствует ключ homeworks')
+
     hw_list = response.get('homeworks', [])
     if hw_list is None:
         raise exceptions.CheckResponseException('Список домашних заданий пуст')
-    if not isinstance(hw_list, list):
-        raise Exception('Ответ API не является списком')
     if len(hw_list) == 0:
         raise exceptions.CheckResponseException(
             'Домашнего задания нет за данный промежуток времени')
-    else:
-        return hw_list
+    if not isinstance(hw_list, list):
+        raise Exception('Ответ API не является списком')
+    return hw_list
 
 
 def parse_status(homework):
