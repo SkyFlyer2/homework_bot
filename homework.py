@@ -80,7 +80,7 @@ def check_response(response):
         raise exceptions.CheckResponseException(
             'Домашнего задания нет за данный промежуток времени')
     if not isinstance(hw_list, list):
-        raise Exception('Ответ API не является списком')
+        raise TypeError('Ответ API не является списком')
     return hw_list
 
 
