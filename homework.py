@@ -1,8 +1,9 @@
 import logging
 import requests
+import json
 from http import HTTPStatus
 from time import time, sleep
-from telegram import Bot
+from telegram import Bot, TelegramError
 import os
 import sys
 from dotenv import load_dotenv
@@ -44,9 +45,9 @@ def send_message(bot, message):
         if old_message != message:
             bot.send_message(TELEGRAM_CHAT_ID, message)
             old_message = message
-            logging.info(f'Сообщение успешно отправлено: {message}')
-    except Exception as error:
-        logging.error(f'Ошибка при отправке сообщения: {error}')
+            logger.info(f'Сообщение успешно отправлено: {message}')
+    except TelegramError as error:
+        logger.error(f'Ошибка при отправке сообщения: {error}')
 
 
 def get_api_answer(current_timestamp):
@@ -56,11 +57,20 @@ def get_api_answer(current_timestamp):
 
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    except Exception as error:
-        raise Exception(f'Ошибка при запросе API: {error}')
+    except requests.exceptions.ConnectionError as errc:
+        raise Exception(f'Ошибка соединения: {errc}')
+    except requests.exceptions.Timeout as errt:
+        raise Exception(f'Таймаут при запросе: {errt}')
+    except requests.exceptions.RequestException as err:
+        raise Exception(f'Ошибка при запросе API: {err}')
     if response.status_code != HTTPStatus.OK:
         raise Exception(f'Ошибка при запросе API: {response.status_code}')
-    return response.json()
+
+    try:
+        response_json = response.json()
+        return response_json
+    except json.decoder.JSONDecodeError as errj:
+        raise Exception(f'Ошибка при возврате JSON: {errj}')
 
 
 def check_response(response):
@@ -114,7 +124,7 @@ def check_tokens():
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
-        logging.critical('Ошибка, отсутствуют переменные окружения')
+        logger.critical('Ошибка, отсутствуют переменные окружения')
         exit()
 
     current_timestamp = int(time())  # - 1209600
@@ -131,10 +141,10 @@ def main():
                 previous_status = status
                 send_message(bot, parse_status(homeworks[0]))
         except exceptions.CheckResponseException as response_status:
-            logging.info(f'Обновление статуса: {response_status}')
+            logger.info(f'Обновление статуса: {response_status}')
         except Exception as error:
             msg_err = f'Сбой в работе программы: {error}'
-            logging.error(msg_err)
+            logger.error(msg_err)
             send_message(bot, msg_err)
         else:
             logger.debug('Работа программы без замечаний')
