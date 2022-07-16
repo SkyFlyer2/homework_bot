@@ -1,14 +1,15 @@
+import os
+import sys
 import logging
 import requests
 import json
+import exceptions
+from logging import StreamHandler
 from http import HTTPStatus
 from time import time, sleep
+
 from telegram import Bot, TelegramError
-import os
-import sys
 from dotenv import load_dotenv
-from logging import StreamHandler
-import exceptions
 
 
 logging.basicConfig(
@@ -75,14 +76,12 @@ def get_api_answer(current_timestamp):
 
 def check_response(response):
     """Проверяет ответ API на корректность."""
-    if isinstance(response, list) and len(response) == 1:
-        # без этого тест не проходит, возможно есть более красивое решение
-        response = response[0]
+    if not isinstance(response, dict):
+        raise TypeError('Ошибка типа данных: в ответе API должен быть словарь')
     if 'current_date' not in response:
         raise Exception('В ответе API отсутствует ключ current_date')
     if 'homeworks' not in response:
         raise Exception('В ответе API отсутствует ключ homeworks')
-
     hw_list = response.get('homeworks', [])
     if hw_list is None:
         raise exceptions.CheckResponseException('Список домашних заданий пуст')
