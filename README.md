@@ -37,6 +37,7 @@ Telegram-бот обращается к API сервиса Практикум.Д
 	$ CHAT_ID = (здесь запишите ID своего бота в телеграм)
 
 Вводная статья про ботов в телеграм: https://core.telegram.org/bots
+
 Документация по Bot API https://core.telegram.org/bots/api
 
 Запустите программу (CTRL+F5)
