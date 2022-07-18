@@ -1,16 +1,16 @@
+import logging
 import os
 import sys
-import logging
-import requests
-import json
-import exceptions
-from logging import StreamHandler
 from http import HTTPStatus
-from time import time, sleep
+from json import JSONDecodeError
+from logging import StreamHandler
+from time import sleep, time
 
-from telegram import Bot, TelegramError
+import requests
 from dotenv import load_dotenv
+from telegram import Bot, TelegramError
 
+import exceptions
 
 logging.basicConfig(
     format='%(asctime)s, %(levelname)s, %(message)s, %(name)s',
@@ -70,7 +70,7 @@ def get_api_answer(current_timestamp):
     try:
         response_json = response.json()
         return response_json
-    except json.decoder.JSONDecodeError as errj:
+    except JSONDecodeError as errj:
         raise Exception(f'Ошибка при возврате JSON: {errj}')
 
 
@@ -126,7 +126,7 @@ def main():
         logger.critical('Ошибка, отсутствуют переменные окружения')
         exit()
 
-    current_timestamp = int(time())  # - 1209600
+    current_timestamp = int(time())
     previous_status = None
     bot = Bot(token=TELEGRAM_TOKEN)
 
